@@ -556,15 +556,22 @@ footer{background:var(--ink);color:var(--cream-deep);padding:2.6rem 0 2rem;}
 
     <div class="form-card">
       <!-- ============================================================
-           FORMSPREE SETUP — 2 minutes, free:
-           1. Go to formspree.io and make a free account
-           2. New Form → name it → copy the endpoint it gives you
-              (looks like https://formspree.io/f/abcdwxyz)
-           3. Paste it into the action="" below, replacing YOUR_FORM_ID
-           4. Submit the form once yourself to confirm the address
-           Free tier = 50 submissions/month.
+           FORMSUBMIT — no account needed. Messages go to the address
+           in the action="" below.
+
+           TO ADD KATIE (or anyone else) as a second recipient, add:
+             <input type="hidden" name="_cc" value="katie@example.com">
+           Comma-separate for more than one.
+
+           TO CHANGE WHERE MESSAGES GO, edit the email in action=""
+           below. The new address has to confirm itself once, the
+           same way the first one did.
            ============================================================ -->
-      <form id="contactForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+      <form id="contactForm" action="https://formsubmit.co/sagecawley06@gmail.com" method="POST">
+
+        <input type="hidden" name="_subject" value="New inquiry from twohandssitting.com">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
 
         <div class="field-row">
           <div class="field">
@@ -615,7 +622,7 @@ footer{background:var(--ink);color:var(--cream-deep);padding:2.6rem 0 2rem;}
         <!-- spam honeypot: real people never see or fill this -->
         <div class="hp" aria-hidden="true">
           <label for="website">Leave this empty</label>
-          <input type="text" id="website" name="_gotcha" tabindex="-1" autocomplete="off">
+          <input type="text" id="website" name="_honey" tabindex="-1" autocomplete="off">
         </div>
 
         <button class="btn btn-primary" type="submit" style="width:100%;">Send message</button>
@@ -646,7 +653,7 @@ footer{background:var(--ink);color:var(--cream-deep);padding:2.6rem 0 2rem;}
 <script>
 /* ------------------------------------------------------------
    Submits the form in the background so people stay on the page
-   and see a friendly confirmation instead of Formspree's screen.
+   and see a friendly confirmation instead of FormSubmit's screen.
    If JS is off or something goes wrong, the form still works the
    normal way — the browser just posts it directly.
    ------------------------------------------------------------ */
@@ -655,15 +662,10 @@ footer{background:var(--ink);color:var(--cream-deep);padding:2.6rem 0 2rem;}
   var statusEl = document.getElementById('formStatus');
   if (!form || !statusEl) return;
 
-  // Don't hijack the submit until a real endpoint is configured.
-  if (form.action.indexOf('YOUR_FORM_ID') !== -1) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      statusEl.className = 'form-status err';
-      statusEl.textContent = 'Form not connected yet — add your Formspree endpoint in the HTML.';
-    });
-    return;
-  }
+  // FormSubmit's AJAX endpoint returns JSON instead of redirecting,
+  // which lets us keep people on the page. Falls back to a normal
+  // POST if JavaScript is off.
+  var endpoint = form.action.replace('formsubmit.co/', 'formsubmit.co/ajax/');
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -674,7 +676,7 @@ footer{background:var(--ink);color:var(--cream-deep);padding:2.6rem 0 2rem;}
     statusEl.className = 'form-status';
     statusEl.textContent = '';
 
-    fetch(form.action, {
+    fetch(endpoint, {
       method: 'POST',
       body: new FormData(form),
       headers: { Accept: 'application/json' }
