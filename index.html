@@ -682,7 +682,20 @@ footer{background:var(--ink);color:var(--cream-deep);padding:2.6rem 0 2rem;}
       headers: { Accept: 'application/json' }
     })
       .then(function (res) {
-        if (!res.ok) throw new Error('Request failed');
+        // FormSubmit answers with HTTP 200 even when it REFUSES the
+        // submission (unconfirmed address, rate limit, spam block).
+        // The JSON body is the only thing that says whether it really
+        // went through, so trusting the status code would show people
+        // a cheerful confirmation for a message that never arrived.
+        return res.json()
+          .catch(function () { return {}; })
+          .then(function (data) {
+            if (!res.ok || String(data.success) === 'false') {
+              throw new Error(data.message || 'Request failed');
+            }
+          });
+      })
+      .then(function () {
         form.reset();
         statusEl.className = 'form-status ok';
         statusEl.textContent = 'Got it — thanks! We’ll get back to you within a day.';
